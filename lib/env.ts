@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const envSchema = z.object({
-  GEMINI_API_KEY: z.string().min(1, "GEMINI_API_KEY is missing"),
+  GEMINI_API_KEY: z.string().optional().or(z.literal("")),
   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().min(1, "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is missing"),
   GOOGLE_TRANSLATE_API_KEY: z.string().min(1, "GOOGLE_TRANSLATE_API_KEY is missing").optional(),
   YOUTUBE_API_KEY: z.string().min(1, "YOUTUBE_API_KEY is missing").optional(),
