@@ -15,8 +15,7 @@ const cspHeader = `
     upgrade-insecure-requests;
 `;
 
-// Casting to 'any' bypasses the "known properties" check while keeping the config valid for Next.js
-const nextConfig: any = {
+const nextConfig: NextConfig = {
   async headers() {
     return [
       {
@@ -30,14 +29,9 @@ const nextConfig: any = {
       },
     ]
   },
-
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
-
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'i.ytimg.com' },
