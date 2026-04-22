@@ -1,4 +1,6 @@
 "use client";
+
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import Timeline from '@/components/Timeline';
@@ -8,8 +10,8 @@ import { LanguageProvider } from '@/components/LanguageContext';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 /**
- * Lazily load the Map component to prevent it from blocking the initial page render.
- * ssr: false is required because the Map component relies on the browser's window object.
+ * Lazily load the Map component.
+ * ssr: false is vital to prevent server-side crashes with window-reliant libraries.
  */
 const LazyMap = dynamic(() => import('@/components/Map'), {
   ssr: false,
@@ -24,6 +26,7 @@ const LazyMap = dynamic(() => import('@/components/Map'), {
  * Lazily load the VideoResources component.
  */
 const LazyVideos = dynamic(() => import('@/components/VideoResources'), {
+  ssr: false,
   loading: () => (
     <div className="w-full h-64 bg-gray-800 rounded-xl animate-pulse flex items-center justify-center mt-8">
       <span className="text-gray-400">Loading Educational Videos...</span>
@@ -31,14 +34,14 @@ const LazyVideos = dynamic(() => import('@/components/VideoResources'), {
   ),
 });
 
-/**
- * The main Home page component of Civic Copilot.
- * Assembles Timeline, Chat, Map, and Videos within a unified layout.
- * Wraps everything in the LanguageProvider to support dynamic translations.
- * 
- * @returns The main application page.
- */
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
+
+  // This effect only runs on the client after the first render.
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <LanguageProvider>
       <main className="min-h-screen bg-gray-900 font-[family-name:var(--font-geist-sans)] selection:bg-indigo-500/30">
@@ -76,23 +79,31 @@ export default function Home() {
               </Suspense>
             </section>
 
-            {/* Map Section */}
+            {/* Map Section - Only renders once mounted to avoid hydration mismatch */}
             <section aria-labelledby="map-section" className="scroll-mt-16">
-              <Suspense fallback={<div className="h-[400px] bg-gray-800 rounded-xl animate-pulse" />}>
-                <ErrorBoundary>
-                  <LazyMap />
-                </ErrorBoundary>
-              </Suspense>
+              {mounted ? (
+                <Suspense fallback={<div className="h-[400px] bg-gray-800 rounded-xl animate-pulse" />}>
+                  <ErrorBoundary>
+                    <LazyMap />
+                  </ErrorBoundary>
+                </Suspense>
+              ) : (
+                <div className="h-[400px] bg-gray-800 rounded-xl border border-gray-700/50" />
+              )}
             </section>
           </div>
 
-          {/* Videos Section */}
+          {/* Videos Section - Only renders once mounted */}
           <section aria-labelledby="videos-section" className="scroll-mt-16">
-            <Suspense fallback={<div className="h-64 bg-gray-800 rounded-xl animate-pulse" />}>
-              <ErrorBoundary>
-                <LazyVideos />
-              </ErrorBoundary>
-            </Suspense>
+            {mounted ? (
+              <Suspense fallback={<div className="h-64 bg-gray-800 rounded-xl animate-pulse" />}>
+                <ErrorBoundary>
+                  <LazyVideos />
+                </ErrorBoundary>
+              </Suspense>
+            ) : (
+              <div className="h-64 bg-gray-800 rounded-xl border border-gray-700/50" />
+            )}
           </section>
         </div>
 
