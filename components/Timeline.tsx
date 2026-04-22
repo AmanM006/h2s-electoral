@@ -1,6 +1,19 @@
-import React from 'react';
+'use client';
 
-const timelineSteps = [
+import React, { useEffect, useState } from 'react';
+import { useLanguage } from './LanguageContext';
+
+/**
+ * Interface defining a step in the election timeline.
+ */
+interface TimelineStep {
+  title: string;
+  description: string;
+  icon: string;
+  date: string;
+}
+
+const defaultSteps: TimelineStep[] = [
   {
     title: 'Voter Registration',
     description: 'Citizens register via Form 6. Must be 18+ and an Indian citizen.',
@@ -39,15 +52,69 @@ const timelineSteps = [
   }
 ];
 
+/**
+ * Timeline component that visualizes the Indian Election Process.
+ * It automatically translates its content based on the global language state.
+ * 
+ * @returns The Timeline component.
+ */
 export default function Timeline() {
+  const { language } = useLanguage();
+  const [steps, setSteps] = useState<TimelineStep[]>(defaultSteps);
+  const [headingText, setHeadingText] = useState('Indian Election Process');
+
+  useEffect(() => {
+    if (language === 'en') {
+      setSteps(defaultSteps);
+      setHeadingText('Indian Election Process');
+      return;
+    }
+
+    const translateContent = async () => {
+      try {
+        const textsToTranslate = [
+          'Indian Election Process',
+          ...defaultSteps.flatMap(step => [step.title, step.description, step.date])
+        ];
+
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: textsToTranslate, target: language })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const translated = data.translatedText;
+          setHeadingText(translated[0]);
+          
+          const newSteps = defaultSteps.map((step, idx) => {
+            const baseIdx = 1 + (idx * 3);
+            return {
+              ...step,
+              title: translated[baseIdx],
+              description: translated[baseIdx + 1],
+              date: translated[baseIdx + 2]
+            };
+          });
+          setSteps(newSteps);
+        }
+      } catch (error) {
+        console.error('Failed to translate timeline:', error);
+      }
+    };
+
+    translateContent();
+  }, [language]);
+
   return (
     <section aria-labelledby="timeline-heading" className="py-8">
       <div className="max-w-4xl mx-auto px-4">
         <h2 id="timeline-heading" className="text-3xl font-extrabold text-white mb-8 text-center drop-shadow-md">
-          Indian Election Process
+          {headingText}
         </h2>
         <div className="relative border-l-4 border-indigo-500 ml-4 md:ml-0 md:mx-auto">
-          {timelineSteps.map((step, index) => (
+          {steps.map((step, index) => (
             <div key={index} className="mb-10 ml-8 group">
               <div className="absolute w-8 h-8 bg-indigo-600 rounded-full -left-[1.15rem] border-4 border-gray-900 flex items-center justify-center text-sm shadow-lg group-hover:scale-125 transition-transform duration-300">
                 {step.icon}
