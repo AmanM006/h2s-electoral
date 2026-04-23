@@ -1,62 +1,62 @@
-import React from 'react';
-import { env } from '@/lib/env';
+"use client";
 
-/**
- * Interface for the YouTube API video response item.
- */
+import React, { useState, useEffect } from 'react';
+
 interface VideoItem {
   id: {
     videoId: string;
   };
   snippet: {
     title: string;
-    description: string;
-    thumbnails: {
-      medium: {
-        url: string;
-      };
-    };
   };
 }
 
-/**
- * Fetches educational videos about the Indian Election Process from YouTube.
- * 
- * @returns A promise that resolves to an array of VideoItem objects.
- */
-async function fetchVideos(): Promise<VideoItem[]> {
-  if (!env.YOUTUBE_API_KEY) {
-    console.warn('YOUTUBE_API_KEY is not set. Skipping video fetch.');
-    return [];
+export default function VideoResources() {
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchVideos = async () => {
+      // By using process.env.NEXT_PUBLIC_, we allow the browser to see the key
+      const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+
+      if (!apiKey) {
+        console.warn('YOUTUBE_API_KEY is not set. Skipping video fetch.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const query = encodeURIComponent('Election Commission of India guide');
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q=${query}&type=video&key=${apiKey}`;
+        
+        const res = await fetch(url);
+        
+        if (!res.ok) {
+          console.error('Failed to fetch YouTube videos');
+          setLoading(false);
+          return;
+        }
+
+        const data = await res.json();
+        setVideos(data.items || []);
+      } catch (error) {
+        console.error('Error fetching videos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVideos();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="w-full h-64 bg-gray-800 rounded-xl animate-pulse flex items-center justify-center mt-8">
+        <span className="text-gray-400">Loading Educational Videos...</span>
+      </div>
+    );
   }
-
-  try {
-    const query = encodeURIComponent('Election Commission of India guide');
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q=${query}&type=video&key=${env.YOUTUBE_API_KEY}`;
-    
-    // next: { revalidate: 86400 } caches the results for 24 hours to save API quota.
-    const res = await fetch(url, { next: { revalidate: 86400 } });
-    
-    if (!res.ok) {
-      console.error('Failed to fetch YouTube videos:', await res.text());
-      return [];
-    }
-
-    const data = await res.json();
-    return data.items || [];
-  } catch (error) {
-    console.error('Error fetching videos:', error);
-    return [];
-  }
-}
-
-/**
- * Server Component that displays a grid of educational YouTube videos.
- * 
- * @returns The VideoResources component.
- */
-export default async function VideoResources() {
-  const videos = await fetchVideos();
 
   if (videos.length === 0) {
     return null;
