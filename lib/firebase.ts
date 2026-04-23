@@ -5,6 +5,9 @@
  * All config values are sourced from NEXT_PUBLIC_ env vars so they are
  * available in both server and client contexts.
  *
+ * Gracefully degrades when env vars are not set — the app will still run
+ * but Firebase features will be unavailable.
+ *
  * @module lib/firebase
  */
 
@@ -22,19 +25,26 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? '',
-  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL ?? '',
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL ?? 'https://placeholder-default-rtdb.firebaseio.com',
 };
 
 /**
  * Singleton Firebase App instance.
  * Re-uses existing app if already initialised (important for HMR).
  */
-const app: FirebaseApp =
-  getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
+let app: FirebaseApp | null = null;
 
 /**
  * Firebase Realtime Database instance bound to the app.
+ * May be null if Firebase credentials are not configured.
  */
-const db: Database = getDatabase(app);
+let db: Database | null = null;
+
+try {
+  app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
+  db = getDatabase(app);
+} catch (error) {
+  console.warn('[Firebase] Initialization skipped — credentials not configured:', (error as Error).message);
+}
 
 export { app, db };
