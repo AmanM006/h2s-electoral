@@ -8,14 +8,25 @@ import { useLanguage } from './LanguageContext';
  * Interface defining a chat message structure.
  */
 interface Message {
+  /** The role of the message author — either the user or the AI model. */
   role: 'user' | 'model';
+  /** The text content of the message. */
   content: string;
 }
 
 /**
  * Chat Component that provides an interactive interface to talk with the Civic Copilot.
  * Utilizes the Gemini API with streaming responses.
- * 
+ *
+ * Key accessibility features:
+ * - `aria-live="polite"` + `aria-atomic="true"` on the message area
+ * - Explicit `<label>` for the input field (screen-reader only)
+ * - `aria-label` on the icon-only Send button
+ *
+ * Key performance features:
+ * - `useMemo` for the message rendering array
+ * - `useCallback` for the form submission handler
+ *
  * @returns The Chat interface component.
  */
 export default function Chat() {
@@ -33,6 +44,8 @@ export default function Chat() {
 
   /**
    * Handles the submission of a new chat message and reads the streaming response.
+   *
+   * @param e - The form submission event.
    */
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,11 +85,11 @@ export default function Chat() {
         if (value) {
           const chunk = decoder.decode(value, { stream: true });
           text += chunk;
-          
+
           // Update the last message (which is the model's current response)
           setMessages(prev => {
             const updated = [...prev];
-            updated[updated.length - 1].content = text;
+            updated[updated.length - 1] = { ...updated[updated.length - 1], content: text };
             return updated;
           });
         }
@@ -90,7 +103,8 @@ export default function Chat() {
   }, [input, isLoading, messages, language]);
 
   /**
-   * Memoized list of rendered message elements to optimize performance.
+   * Memoized list of rendered message elements to optimize performance
+   * by preventing re-renders when the user types in the input field.
    */
   const renderedMessages = useMemo(() => {
     return messages.map((msg, index) => (
@@ -124,9 +138,11 @@ export default function Chat() {
         </div>
       </header>
 
+      {/* Chat messages area — aria-live + aria-atomic for screen reader announcements */}
       <div
         className="flex-1 overflow-y-auto p-6 bg-gray-800/50"
         aria-live="polite"
+        aria-atomic="true"
         role="log"
       >
         {renderedMessages}
@@ -147,12 +163,17 @@ export default function Chat() {
       </div>
 
       <form onSubmit={handleSubmit} className="p-4 bg-gray-900 border-t border-gray-700 flex gap-2 items-center">
+        {/* Screen-reader-only label for the chat input */}
+        <label htmlFor="chat-input" className="sr-only">
+          Type your message to Civic Copilot
+        </label>
         <input
+          id="chat-input"
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about voter registration, election phases..."
-          aria-label="Chat input message"
+          aria-label="Type your message to Civic Copilot"
           disabled={isLoading}
           className="flex-1 bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
         />

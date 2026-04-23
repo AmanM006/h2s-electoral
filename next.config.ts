@@ -1,12 +1,16 @@
 import type { NextConfig } from "next";
 
+/**
+ * Content-Security-Policy header string.
+ * Allows Google Maps, YouTube, Google Fonts, Gemini, and Translation APIs.
+ */
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://maps.googleapis.com https://www.youtube.com https://s.ytimg.com;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://maps.googleapis.com https://www.youtube.com https://s.ytimg.com https://www.googletagmanager.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' blob: data: https://maps.gstatic.com https://maps.googleapis.com https://i.ytimg.com;
+    img-src 'self' blob: data: https://maps.gstatic.com https://maps.googleapis.com https://i.ytimg.com https://www.googletagmanager.com;
     font-src 'self' https://fonts.gstatic.com;
-    connect-src 'self' https://generativelanguage.googleapis.com https://maps.googleapis.com https://translation.googleapis.com https://www.googleapis.com;
+    connect-src 'self' https://generativelanguage.googleapis.com https://maps.googleapis.com https://translation.googleapis.com https://www.googleapis.com https://www.google-analytics.com https://analytics.google.com;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
@@ -15,7 +19,11 @@ const cspHeader = `
     upgrade-insecure-requests;
 `;
 
-const nextConfig: any = {
+/**
+ * Next.js configuration with strict OWASP security headers, CSP,
+ * and build-time pragmas.
+ */
+const nextConfig: NextConfig = {
   async headers() {
     return [
       {
@@ -25,9 +33,29 @@ const nextConfig: any = {
             key: 'Content-Security-Policy',
             value: cspHeader.replace(/\n/g, ''),
           },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(self)',
+          },
         ],
       },
-    ]
+    ];
   },
   eslint: {
     ignoreDuringBuilds: true,
