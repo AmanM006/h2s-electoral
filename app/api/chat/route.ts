@@ -55,7 +55,7 @@ const WINDOW_MS = 60 * 1000;
 export async function POST(req: NextRequest) {
   try {
     // Rate Limiting Logic
-    const ip = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
+    const ip = req.headers.get('x-forwarded-for') || 'unknown';
     const now = Date.now();
     const userLimit = rateLimitMap.get(ip) || { count: 0, lastReset: now };
 

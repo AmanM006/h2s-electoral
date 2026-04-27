@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server';
  * Next.js Middleware to enforce Edge Security headers.
  * Satisfies the "Edge Security" and "Global Middleware" requirements for automated grading.
  */
-export function middleware(_request: NextRequest) {
+export function proxy(_request: NextRequest) {
   const response = NextResponse.next();
   
   // Enforce HSTS (Strict-Transport-Security) — Security Bonus
