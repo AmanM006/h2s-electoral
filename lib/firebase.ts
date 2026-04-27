@@ -1,7 +1,7 @@
 /**
  * Firebase initialization module for Civic Copilot.
  *
- * Initializes Firebase App and Realtime Database using environment variables.
+ * Initializes Firebase App, Realtime Database, Firestore, and Auth using environment variables.
  * All config values are sourced from NEXT_PUBLIC_ env vars so they are
  * available in both server and client contexts.
  *
@@ -14,6 +14,7 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getDatabase, Database } from 'firebase/database';
 import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
 /**
  * Firebase configuration object populated from environment variables.
@@ -42,6 +43,11 @@ let app: FirebaseApp | null = null;
 let db: Database | null = null;
 
 /**
+ * Firebase Firestore instance for structured citizen data and complaints.
+ */
+let firestore: Firestore | null = null;
+
+/**
  * Firebase Auth instance.
  */
 let auth: Auth | null = null;
@@ -50,6 +56,7 @@ let googleProvider: GoogleAuthProvider | null = null;
 try {
   app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
   db = getDatabase(app);
+  firestore = getFirestore(app);
   auth = getAuth(app);
   
   googleProvider = new GoogleAuthProvider();
@@ -57,4 +64,4 @@ try {
   console.warn('[Firebase] Initialization skipped — credentials not configured:', (error as Error).message);
 }
 
-export { app, db, auth, googleProvider };
+export { app, db, firestore, auth, googleProvider };

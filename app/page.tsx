@@ -28,6 +28,15 @@ const LazyVideos = dynamic(() => import('@/components/VideoResources'), {
   ),
 });
 
+const LazyCitizenDashboard = dynamic(() => import('@/components/CitizenDashboard'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-96 bg-card rounded-2xl animate-pulse border border-border-subtle flex items-center justify-center">
+      <span className="text-gray-500 text-sm font-medium">Loading Citizen Dashboard...</span>
+    </div>
+  ),
+});
+
 export default function Home() {
   const [mounted, setMounted] = useState(false);
 
@@ -54,6 +63,19 @@ export default function Home() {
               <AuthButton />
             </div>
           </div>
+        </div>
+
+        {/* Citizen Dashboard — top of content, auth-gated */}
+        <div className="max-w-7xl mx-auto px-6 pt-10">
+          {mounted ? (
+            <Suspense fallback={<div className="h-96 bg-card rounded-2xl animate-pulse border border-border-subtle" />}>
+              <ErrorBoundary>
+                <LazyCitizenDashboard />
+              </ErrorBoundary>
+            </Suspense>
+          ) : (
+            <div className="h-96 bg-card rounded-2xl border border-border-subtle" />
+          )}
         </div>
 
         {/* Hero Section */}
