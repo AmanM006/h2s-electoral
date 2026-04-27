@@ -159,7 +159,7 @@ export default function Map() {
   const memoizedOptions = useMemo(() => ({
     disableDefaultUI: true,
     zoomControl: true,
-    mapId: '4504f990513ad765',
+    mapId: '407df609f891dfdaaee6dbe5',
     styles: darkMapStyles,
   }), []);
 
