@@ -14,8 +14,9 @@ export function proxy(_request: NextRequest) {
     'max-age=63072000; includeSubDomains; preload'
   );
 
-  // Cross-Origin-Opener-Policy (COOP) — Essential for Firebase Popups
-  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  // Cross-Origin-Opener-Policy (COOP) — set to unsafe-none to allow Firebase Auth popup
+  // window.closed polling. This is safe alongside HSTS on localhost and production.
+  response.headers.set('Cross-Origin-Opener-Policy', 'unsafe-none');
 
   return response;
 }
