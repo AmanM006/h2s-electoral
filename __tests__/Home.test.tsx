@@ -47,6 +47,12 @@ jest.mock('@/components/LanguageSelector', () => {
   };
 });
 
+jest.mock('@/components/AuthButton', () => {
+  return function MockAuthButton() {
+    return <div data-testid="mock-auth-button">Auth Button</div>;
+  };
+});
+
 jest.mock('@/components/ErrorBoundary', () => {
   return function MockErrorBoundary({ children }: { children: React.ReactNode }) {
     return <>{children}</>;

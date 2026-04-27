@@ -59,6 +59,36 @@ export default function VideoResources() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Official Portals */}
+          <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-6 mb-4">
+            <a 
+              href="https://eci.gov.in/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-6 bg-card border border-border-subtle rounded-2xl hover:border-accent transition-all group"
+            >
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-accent uppercase tracking-widest">Official Website</span>
+                <h3 className="text-lg font-bold text-white">ECI Main Portal</h3>
+                <p className="text-xs text-gray-400">Election Commission of India</p>
+              </div>
+              <ExternalLink size={20} className="text-gray-500 group-hover:text-accent transition-colors" />
+            </a>
+            <a 
+              href="https://voters.eci.gov.in/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-6 bg-card border border-border-subtle rounded-2xl hover:border-emerald-500 transition-all group"
+            >
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Voter Services</span>
+                <h3 className="text-lg font-bold text-white">Voter Portal</h3>
+                <p className="text-xs text-gray-400">Registration & Voting Status</p>
+              </div>
+              <ExternalLink size={20} className="text-gray-500 group-hover:text-emerald-500 transition-colors" />
+            </a>
+          </div>
+
           {videos.map((video, index) => (
             <div 
               key={video.id.videoId} 
@@ -68,7 +98,7 @@ export default function VideoResources() {
               <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-border-subtle group-hover:border-gray-500 transition-colors">
                 <iframe
                   src={`https://www.youtube.com/embed/${video.id.videoId}?modestbranding=1&rel=0`}
-                  title={video.snippet.title}
+                  title={`YouTube video player: ${video.snippet.title}`}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="absolute inset-0 w-full h-full grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500"

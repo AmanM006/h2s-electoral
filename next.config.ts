@@ -6,16 +6,16 @@ import type { NextConfig } from "next";
  */
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://maps.googleapis.com https://www.youtube.com https://s.ytimg.com https://www.googletagmanager.com;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://www.gstatic.com https://*.firebaseapp.com https://maps.googleapis.com https://www.youtube.com https://s.ytimg.com https://www.googletagmanager.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://maps.gstatic.com https://maps.googleapis.com https://i.ytimg.com https://www.googletagmanager.com;
     font-src 'self' https://fonts.gstatic.com;
-    connect-src 'self' https://generativelanguage.googleapis.com https://maps.googleapis.com https://translation.googleapis.com https://www.googleapis.com https://www.google-analytics.com https://analytics.google.com;
+    connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://generativelanguage.googleapis.com https://maps.googleapis.com https://translation.googleapis.com https://www.googleapis.com https://www.google-analytics.com https://analytics.google.com;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    frame-src https://www.youtube.com;
+    frame-src https://www.youtube.com https://*.firebaseapp.com https://*.google.com;
     upgrade-insecure-requests;
 `;
 
@@ -32,6 +32,10 @@ const nextConfig: NextConfig = {
           {
             key: 'Content-Security-Policy',
             value: cspHeader.replace(/\n/g, ''),
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin-allow-popups',
           },
           {
             key: 'Strict-Transport-Security',
@@ -57,9 +61,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'i.ytimg.com' },

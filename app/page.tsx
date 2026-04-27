@@ -8,6 +8,7 @@ import Chat from '@/components/Chat';
 import LanguageSelector from '@/components/LanguageSelector';
 import { LanguageProvider } from '@/components/LanguageContext';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import AuthButton from '@/components/AuthButton';
 
 const LazyMap = dynamic(() => import('@/components/Map'), {
   ssr: false,
@@ -47,7 +48,10 @@ export default function Home() {
               <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
               <span className="font-bold text-lg tracking-tight">CIVIC COPILOT</span>
             </div>
-            <LanguageSelector />
+            <div className="flex items-center gap-4">
+              <LanguageSelector />
+              <AuthButton />
+            </div>
           </div>
         </div>
 
@@ -116,8 +120,8 @@ export default function Home() {
               &copy; {new Date().getFullYear()} Civic Copilot &mdash; Official Guidelines Source
             </p>
             <div className="flex gap-8">
-              <a href="#" className="text-gray-500 hover:text-white text-xs transition-colors font-medium uppercase tracking-widest">ECI Website</a>
-              <a href="#" className="text-gray-500 hover:text-white text-xs transition-colors font-medium uppercase tracking-widest">Voter Portal</a>
+              <a href="https://eci.gov.in/" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white text-xs transition-colors font-medium uppercase tracking-widest">ECI Website</a>
+              <a href="https://voters.eci.gov.in/" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white text-xs transition-colors font-medium uppercase tracking-widest">Voter Portal</a>
             </div>
           </div>
         </footer>

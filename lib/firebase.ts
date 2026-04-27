@@ -13,6 +13,7 @@
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getDatabase, Database } from 'firebase/database';
+import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
 
 /**
  * Firebase configuration object populated from environment variables.
@@ -40,11 +41,20 @@ let app: FirebaseApp | null = null;
  */
 let db: Database | null = null;
 
+/**
+ * Firebase Auth instance.
+ */
+let auth: Auth | null = null;
+let googleProvider: GoogleAuthProvider | null = null;
+
 try {
   app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
   db = getDatabase(app);
+  auth = getAuth(app);
+  
+  googleProvider = new GoogleAuthProvider();
 } catch (error) {
   console.warn('[Firebase] Initialization skipped — credentials not configured:', (error as Error).message);
 }
 
-export { app, db };
+export { app, db, auth, googleProvider };

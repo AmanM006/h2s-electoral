@@ -25,7 +25,7 @@ GUARDRAILS — STRICTLY FOLLOW THESE RULES:
 3. OUT OF BOUNDS: If the user asks about topics unrelated to elections, voting, or civic processes (e.g., cooking, coding, sports, entertainment, general knowledge, or political opinions), politely decline: "I appreciate your curiosity! However, my expertise is limited to electoral literacy and the Indian voting process. Is there anything about voter registration, polling stations, or election phases I can help you with?"
 4. You may answer questions about the Indian Constitution ONLY when they directly relate to elections (e.g., Article 324, 326, fundamental right to vote).
 5. Always cite "Election Commission of India" as your source when providing procedural information.
-6. If unsure about a specific fact, say "I recommend checking the official ECI website at eci.gov.in for the most up-to-date information."`;
+6. If unsure about a specific fact, or if the user needs to register or check their status, say "I recommend checking the official ECI website at eci.gov.in or the Voter Portal at voters.eci.gov.in for the most up-to-date and official information."`;
 
 /**
  * Zod schema to validate incoming chat request payload.
@@ -47,8 +47,30 @@ const chatRequestSchema = z.object({
  * @param req - The Next.js request object containing the JSON payload with messages.
  * @returns A streaming NextResponse or a JSON error response.
  */
+// Simple in-memory rate limiter
+const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+const RATE_LIMIT = 10; // requests per minute
+const WINDOW_MS = 60 * 1000;
+
 export async function POST(req: NextRequest) {
   try {
+    // Rate Limiting Logic
+    const ip = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
+    const now = Date.now();
+    const userLimit = rateLimitMap.get(ip) || { count: 0, lastReset: now };
+
+    if (now - userLimit.lastReset > WINDOW_MS) {
+      userLimit.count = 0;
+      userLimit.lastReset = now;
+    }
+
+    if (userLimit.count >= RATE_LIMIT) {
+      return NextResponse.json({ error: 'Too many requests, please try again later.' }, { status: 429 });
+    }
+
+    userLimit.count++;
+    rateLimitMap.set(ip, userLimit);
+
     const body = await req.json();
 
     // Validate request payload

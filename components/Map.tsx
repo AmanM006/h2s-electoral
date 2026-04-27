@@ -36,8 +36,9 @@ export default function Map() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedStation, setSelectedStation] = useState<PollingStation | null>(null);
+  const [pollingStations, setPollingStations] = useState<PollingStation[]>(REAL_POLLING_STATIONS);
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const markersRef = useRef<any[]>([]);
+  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -59,14 +60,14 @@ export default function Map() {
     });
     markersRef.current = [];
 
-    const { AdvancedMarkerElement, PinElement } = window.google.maps.marker as any;
+    const { AdvancedMarkerElement, PinElement } = window.google.maps.marker as typeof google.maps.marker;
 
     // 1. User/Search Point Marker (Indigo)
     const userPin = new PinElement({
       background: '#6366f1',
       borderColor: '#ffffff',
       glyphColor: '#ffffff',
-      scale: 1.2, // Made larger for visibility
+      scale: 1.2,
     });
 
     const userMarker = new AdvancedMarkerElement({
@@ -78,14 +79,14 @@ export default function Map() {
     });
     markersRef.current.push(userMarker);
 
-    // 2. Polling Station Markers (Vibrant Emerald with Glyphs)
-    REAL_POLLING_STATIONS.forEach(station => {
+    // 2. Polling Station Markers (Vibrant Emerald)
+    pollingStations.forEach(station => {
       const stationPin = new PinElement({
         background: '#10b981',
         borderColor: '#ffffff',
-        glyphColor: '#000000', // Black glyph for contrast
-        glyph: '🗳️', // Use ballot box emoji as glyph
-        scale: 1.4, // Significantly larger for visibility
+        glyphColor: '#000000',
+        glyph: '🗳️',
+        scale: 1.4,
       });
 
       const marker = new AdvancedMarkerElement({
@@ -97,13 +98,12 @@ export default function Map() {
 
       marker.addListener('click', () => {
         setSelectedStation(station);
-        // Center slightly offset to allow info window space
         map.panTo({ lat: station.lat + 0.001, lng: station.lng });
       });
 
       markersRef.current.push(marker);
     });
-  }, [map, isLoaded, center]);
+  }, [map, isLoaded, center, pollingStations]);
 
   const handleSearch = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +124,26 @@ export default function Map() {
       if (response.results?.[0]) {
         const { lat, lng } = response.results[0].geometry.location;
         const coords = { lat: lat(), lng: lng() };
+        
+        // Generate 3-4 mock polling stations around the new location
+        const names = ["Govt High School Center", "Community Hall Booth", "Primary Health Center", "Voters Facilitation Club"];
+        const count = Math.floor(Math.random() * 2) + 3;
+        const mockStations: PollingStation[] = Array.from({ length: count }).map((_, i) => {
+          const latOffset = (Math.random() * 0.01 + 0.005) * (Math.random() > 0.5 ? 1 : -1);
+          const lngOffset = (Math.random() * 0.01 + 0.005) * (Math.random() > 0.5 ? 1 : -1);
+          return {
+            id: `mock-${Date.now()}-${i}`,
+            name: names[i] || `Booth ${i + 1}`,
+            lat: coords.lat + latOffset,
+            lng: coords.lng + lngOffset,
+            waitTime: `~${Math.floor(Math.random() * 25) + 5} mins`,
+            accessibility: "Ground Floor, Ramp Available",
+            ward: "Nearby Area"
+          };
+        });
+
         setCenter(coords);
+        setPollingStations(mockStations);
         setZoom(15);
       } else {
         setError('PIN location not found.');
@@ -140,7 +159,7 @@ export default function Map() {
   const memoizedOptions = useMemo(() => ({
     disableDefaultUI: true,
     zoomControl: true,
-    mapId: '4504f990513ad765', // Using a public dark-themed Map ID for better visuals if possible, or fallback to styles
+    mapId: '4504f990513ad765',
     styles: darkMapStyles,
   }), []);
 
@@ -163,7 +182,7 @@ export default function Map() {
           </div>
         </div>
 
-        <form onSubmit={handleSearch} className="relative group">
+        <form onSubmit={handleSearch} className="relative group mb-6">
           <input
             type="text"
             value={pinCode}
@@ -181,6 +200,33 @@ export default function Map() {
             {isLoading ? <Loader2 size={16} className="animate-spin" /> : 'Search'}
           </button>
         </form>
+
+        {/* Dynamic Station List (Glassmorphism) */}
+        {pollingStations.length > 0 && pinCode.length === 6 && !error && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fadeIn">
+            {pollingStations.map((station) => (
+              <div 
+                key={station.id} 
+                onClick={() => {
+                  setCenter({ lat: station.lat, lng: station.lng });
+                  setSelectedStation(station);
+                }}
+                className="group cursor-pointer p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/10 hover:border-emerald-500/50 transition-all flex items-center justify-between"
+              >
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-xs font-bold text-gray-200 group-hover:text-white transition-colors">{station.name}</h3>
+                  <span className="text-[10px] font-medium text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <Clock size={10} /> {station.waitTime} wait
+                  </span>
+                </div>
+                <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <MapPin size={12} className="text-emerald-500" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {error && <p className="text-[11px] text-red-500 mt-3 font-bold uppercase tracking-widest">{error}</p>}
       </div>
 

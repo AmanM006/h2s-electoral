@@ -105,4 +105,34 @@ describe('Map Component', () => {
       });
     });
   });
+
+  it('generates dynamic mock polling stations on successful search', async () => {
+    mockGeocode.mockResolvedValueOnce({
+      results: [
+        {
+          geometry: {
+            location: {
+              lat: () => 12.9352,
+              lng: () => 77.6245
+            }
+          }
+        }
+      ]
+    });
+
+    render(<Map />);
+    const input = screen.getByPlaceholderText(/Enter PIN Code/i);
+    const button = screen.getByRole('button', { name: /Search/i });
+
+    fireEvent.change(input, { target: { value: '560034' } });
+    fireEvent.click(button);
+
+    // Wait for geocode to resolve and UI to update
+    await waitFor(() => {
+      // It should generate either "Govt High School Center", "Community Hall Booth", etc.
+      // We can check if at least one of the generic names appears in the glassmorphism list
+      const generatedStations = screen.getAllByText(/Govt High School Center|Community Hall Booth|Primary Health Center|Voters Facilitation Club|Booth/i);
+      expect(generatedStations.length).toBeGreaterThanOrEqual(1);
+    });
+  });
 });
