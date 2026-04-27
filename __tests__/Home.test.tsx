@@ -54,10 +54,18 @@ jest.mock('@/components/ErrorBoundary', () => {
 });
 
 describe('Home Page', () => {
-  it('renders the main "Civic Copilot" heading', () => {
+  it('renders the main "CIVIC COPILOT" branding', () => {
     render(<Home />);
-    const heading = screen.getByRole('heading', { level: 1, name: /Civic Copilot/i });
-    expect(heading).toBeInTheDocument();
+    // There are multiple instances (header and footer), so we check that at least one is present
+    const branding = screen.getAllByText(/CIVIC COPILOT/i);
+    expect(branding.length).toBeGreaterThan(0);
+    expect(branding[0]).toBeInTheDocument();
+  });
+
+  it('renders the hero heading', () => {
+    render(<Home />);
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(heading).toHaveTextContent(/Electoral Literacy/i);
   });
 
   it('renders the descriptive subtitle text', () => {

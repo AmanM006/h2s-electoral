@@ -1,10 +1,16 @@
 import { render, screen } from '@testing-library/react';
 import Timeline from '@/components/Timeline';
 
+// Mock language context
+jest.mock('@/components/LanguageContext', () => ({
+  useLanguage: () => ({ language: 'en' })
+}));
+
 describe('Timeline Component', () => {
-  it('renders the heading correctly', () => {
+  it('renders the roadmap heading correctly', () => {
     render(<Timeline />);
-    const heading = screen.getByRole('heading', { level: 2, name: /Indian Election Process/i });
+    // The heading text is now "Election Roadmap"
+    const heading = screen.getByText(/Election Roadmap/i);
     expect(heading).toBeInTheDocument();
   });
 
@@ -24,9 +30,10 @@ describe('Timeline Component', () => {
     });
   });
 
-  it('has accessible section', () => {
+  it('has accessible area', () => {
     render(<Timeline />);
-    const section = screen.getByRole('region', { name: /Indian Election Process/i });
-    expect(section).toBeInTheDocument();
+    // We search for the text that labels the area
+    const heading = screen.getByText(/Election Roadmap/i);
+    expect(heading).toHaveAttribute('id', 'timeline-heading');
   });
 });

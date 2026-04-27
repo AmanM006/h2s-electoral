@@ -1,14 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { Play, ExternalLink, Loader2 } from 'lucide-react';
 
 interface VideoItem {
-  id: {
-    videoId: string;
-  };
-  snippet: {
-    title: string;
-  };
+  id: { videoId: string };
+  snippet: { title: string };
 }
 
 export default function VideoResources() {
@@ -17,31 +14,22 @@ export default function VideoResources() {
 
   useEffect(() => {
     const fetchVideos = async () => {
-      // By using process.env.NEXT_PUBLIC_, we allow the browser to see the key
       const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
-
       if (!apiKey) {
-        console.warn('YOUTUBE_API_KEY is not set. Skipping video fetch.');
         setLoading(false);
         return;
       }
 
       try {
-        const query = encodeURIComponent('Election Commission of India guide');
+        const query = encodeURIComponent('Election Commission of India official');
         const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q=${query}&type=video&key=${apiKey}`;
-        
         const res = await fetch(url);
-        
-        if (!res.ok) {
-          console.error('Failed to fetch YouTube videos');
-          setLoading(false);
-          return;
+        if (res.ok) {
+          const data = await res.json();
+          setVideos(data.items || []);
         }
-
-        const data = await res.json();
-        setVideos(data.items || []);
       } catch (error) {
-        console.error('Error fetching videos:', error);
+        console.error('Fetch error:', error);
       } finally {
         setLoading(false);
       }
@@ -52,37 +40,57 @@ export default function VideoResources() {
 
   if (loading) {
     return (
-      <div className="w-full h-64 bg-gray-800 rounded-xl animate-pulse flex items-center justify-center mt-8">
-        <span className="text-gray-400">Loading Educational Videos...</span>
+      <div className="w-full h-48 bg-card rounded-2xl animate-pulse border border-border-subtle flex items-center justify-center">
+        <Loader2 className="animate-spin text-gray-800" size={24} />
       </div>
     );
   }
 
-  if (videos.length === 0) {
-    return null;
-  }
+  if (videos.length === 0) return null;
 
   return (
-    <section aria-labelledby="videos-heading" className="py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <h2 id="videos-heading" className="text-3xl font-extrabold text-white mb-8 text-center drop-shadow-md">
-          Educational Resources
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {videos.map((video) => (
-            <div key={video.id.videoId} className="bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 flex flex-col">
-              <div className="relative pt-[56.25%] w-full">
+    <div className="py-12">
+      <div className="max-w-5xl mx-auto">
+        <div className="flex items-center gap-4 mb-12">
+          <div className="w-12 h-[1px] bg-emerald-500" />
+          <h2 id="videos-heading" className="text-xs font-bold uppercase tracking-[0.4em] text-gray-500">
+            Resources
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {videos.map((video, index) => (
+            <div 
+              key={video.id.videoId} 
+              className="group animate-fadeIn flex flex-col" 
+              style={{ animationDelay: `${index * 150}ms` }}
+            >
+              <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-border-subtle group-hover:border-gray-500 transition-colors">
                 <iframe
-                  src={`https://www.youtube.com/embed/${video.id.videoId}`}
+                  src={`https://www.youtube.com/embed/${video.id.videoId}?modestbranding=1&rel=0`}
                   title={video.snippet.title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  className="absolute top-0 left-0 w-full h-full"
-                  aria-label={`YouTube video: ${video.snippet.title}`}
+                  className="absolute inset-0 w-full h-full grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500"
                 />
+                <div className="absolute inset-0 pointer-events-none border-[6px] border-black opacity-10" />
               </div>
-              <div className="p-4 flex-1 flex flex-col">
-                <h3 className="text-sm font-bold text-white line-clamp-2 mb-2" title={video.snippet.title}>
+              
+              <div className="pt-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
+                    <Play size={10} fill="currentColor" /> Video
+                  </span>
+                  <a 
+                    href={`https://www.youtube.com/watch?v=${video.id.videoId}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-gray-500 hover:text-white transition-colors"
+                  >
+                    <ExternalLink size={12} />
+                  </a>
+                </div>
+                <h3 className="text-sm font-bold text-gray-300 line-clamp-2 leading-tight group-hover:text-white transition-colors">
                   {video.snippet.title}
                 </h3>
               </div>
@@ -90,6 +98,6 @@ export default function VideoResources() {
           ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 }

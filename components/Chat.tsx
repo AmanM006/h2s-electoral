@@ -1,38 +1,52 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Send, User, Bot, Loader2 } from 'lucide-react';
+import { Send, User, Bot, Loader2, Copy, Check } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 
-/**
- * Interface defining a chat message structure.
- */
 interface Message {
-  /** The role of the message author — either the user or the AI model. */
   role: 'user' | 'model';
-  /** The text content of the message. */
   content: string;
 }
 
-/**
- * Chat Component that provides an interactive interface to talk with the Civic Copilot.
- * Utilizes the Gemini API with streaming responses.
- *
- * Key accessibility features:
- * - `aria-live="polite"` + `aria-atomic="true"` on the message area
- * - Explicit `<label>` for the input field (screen-reader only)
- * - `aria-label` on the icon-only Send button
- *
- * Key performance features:
- * - `useMemo` for the message rendering array
- * - `useCallback` for the form submission handler
- *
- * @returns The Chat interface component.
- */
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Copy failed', err);
+    }
+  }, [text]);
+
+  return (
+    <button
+      onClick={handleCopy}
+      aria-label={copied ? 'Copied' : 'Copy'}
+      className="mt-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors focus:outline-none"
+    >
+      {copied ? (
+        <>
+          <Check size={10} className="text-emerald-500" />
+          <span className="text-emerald-500">Copied</span>
+        </>
+      ) : (
+        <>
+          <Copy size={10} />
+          <span>Copy</span>
+        </>
+      )}
+    </button>
+  );
+}
+
 export default function Chat() {
   const { language } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', content: 'Namaste! I am Civic Copilot, your guide to the Indian Election process. How can I help you today?' }
+    { role: 'model', content: 'Namaste. I am Civic Copilot. How can I assist with your electoral queries today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -42,11 +56,6 @@ export default function Chat() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  /**
-   * Handles the submission of a new chat message and reads the streaming response.
-   *
-   * @param e - The form submission event.
-   */
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -61,22 +70,16 @@ export default function Chat() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: newMessages,
-          language
-        }),
+        body: JSON.stringify({ messages: newMessages, language }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
+      if (!response.ok) throw new Error('Network error');
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let done = false;
       let text = '';
 
-      // Initialize the model's message in the UI
       setMessages(prev => [...prev, { role: 'model', content: '' }]);
 
       while (reader && !done) {
@@ -85,39 +88,36 @@ export default function Chat() {
         if (value) {
           const chunk = decoder.decode(value, { stream: true });
           text += chunk;
-
-          // Update the last message (which is the model's current response)
           setMessages(prev => {
             const updated = [...prev];
-            updated[updated.length - 1] = { ...updated[updated.length - 1], content: text };
+            updated[updated.length - 1].content = text;
             return updated;
           });
         }
       }
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'model', content: 'Sorry, I encountered an error. Please try again.' }]);
+      setMessages(prev => [...prev, { role: 'model', content: 'An error occurred. Please try again.' }]);
     } finally {
       setIsLoading(false);
     }
   }, [input, isLoading, messages, language]);
 
-  /**
-   * Memoized list of rendered message elements to optimize performance
-   * by preventing re-renders when the user types in the input field.
-   */
   const renderedMessages = useMemo(() => {
     return messages.map((msg, index) => (
       <div
         key={index}
-        className={`flex w-full mb-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+        className={`flex w-full mb-8 animate-fadeIn ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
       >
-        <div className={`flex max-w-[80%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-          <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${msg.role === 'user' ? 'bg-indigo-600 ml-3' : 'bg-emerald-600 mr-3'}`}>
-            {msg.role === 'user' ? <User size={20} className="text-white" /> : <Bot size={20} className="text-white" />}
+        <div className={`flex max-w-[90%] gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+          <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center border border-border-subtle ${msg.role === 'user' ? 'bg-white' : 'bg-black'}`}>
+            {msg.role === 'user' ? <User size={14} className="text-black" /> : <Bot size={14} className="text-white" />}
           </div>
-          <div className={`p-4 rounded-2xl shadow-md ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-gray-700 text-gray-100 rounded-tl-none border border-gray-600'}`}>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+          <div className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+            <div className={`p-4 rounded-xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-accent text-white' : 'bg-card border border-border-subtle text-gray-200'}`}>
+              <p className="whitespace-pre-wrap">{msg.content}</p>
+            </div>
+            {msg.role === 'model' && msg.content && index > 0 && <CopyButton text={msg.content} />}
           </div>
         </div>
       </div>
@@ -125,36 +125,25 @@ export default function Chat() {
   }, [messages]);
 
   return (
-    <div className="bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 flex flex-col h-[600px] overflow-hidden">
-      <header className="bg-gray-900 p-4 border-b border-gray-700 flex items-center justify-between">
-        <div className="flex items-center">
-          <div className="bg-emerald-500/20 p-2 rounded-lg mr-3">
-            <Bot className="text-emerald-400" size={24} />
-          </div>
-          <div>
-            <h2 id="chat-heading" className="text-xl font-bold text-white">Civic Copilot</h2>
-            <p className="text-sm text-gray-400">Election Commission of India AI Guide</p>
-          </div>
+    <div className="bg-card rounded-2xl border border-border-subtle flex flex-col h-[600px] overflow-hidden shadow-2xl">
+      <header className="px-6 py-4 border-b border-border-subtle bg-black/30 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+          <h2 id="chat-heading" className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Assistant</h2>
         </div>
       </header>
 
-      {/* Chat messages area — aria-live + aria-atomic for screen reader announcements */}
-      <div
-        className="flex-1 overflow-y-auto p-6 bg-gray-800/50"
-        aria-live="polite"
-        aria-atomic="true"
-        role="log"
-      >
+      <div className="flex-1 overflow-y-auto p-6 scroll-smooth" aria-live="polite" aria-atomic="true">
         {renderedMessages}
         {isLoading && messages[messages.length - 1].role === 'user' && (
-          <div className="flex justify-start mb-4">
-            <div className="flex flex-row max-w-[80%]">
-              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-emerald-600 mr-3 flex items-center justify-center">
-                <Bot size={20} className="text-white" />
+          <div className="flex justify-start mb-8 animate-fadeIn">
+            <div className="flex flex-row max-w-[90%] gap-4">
+              <div className="flex-shrink-0 h-8 w-8 rounded-full bg-black border border-border-subtle flex items-center justify-center">
+                <Bot size={14} className="text-white" />
               </div>
-              <div className="p-4 rounded-2xl bg-gray-700 text-gray-100 rounded-tl-none flex items-center gap-2">
-                <Loader2 size={16} className="animate-spin text-emerald-400" />
-                <span className="text-sm">Thinking...</span>
+              <div className="p-4 rounded-xl bg-card border border-border-subtle flex items-center gap-3">
+                <Loader2 size={12} className="animate-spin text-gray-500" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Processing</span>
               </div>
             </div>
           </div>
@@ -162,29 +151,27 @@ export default function Chat() {
         <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 bg-gray-900 border-t border-gray-700 flex gap-2 items-center">
-        {/* Screen-reader-only label for the chat input */}
-        <label htmlFor="chat-input" className="sr-only">
-          Type your message to Civic Copilot
-        </label>
-        <input
-          id="chat-input"
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about voter registration, election phases..."
-          aria-label="Type your message to Civic Copilot"
-          disabled={isLoading}
-          className="flex-1 bg-gray-800 text-white border border-gray-600 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
-        />
-        <button
-          type="submit"
-          disabled={isLoading || !input.trim()}
-          aria-label="Send message"
-          className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 text-white p-3 rounded-xl transition-colors focus:ring-2 focus:ring-emerald-500 focus:outline-none flex items-center justify-center"
-        >
-          <Send size={20} />
-        </button>
+      <form onSubmit={handleSubmit} className="p-4 bg-black/50 border-t border-border-subtle">
+        <div className="relative flex items-center">
+          <label htmlFor="chat-input" className="sr-only">Message</label>
+          <input
+            id="chat-input"
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your query..."
+            disabled={isLoading}
+            className="w-full bg-black text-white border border-border-subtle rounded-xl px-5 py-4 text-sm focus:outline-none focus:border-accent transition-all disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={isLoading || !input.trim()}
+            aria-label="Send"
+            className="absolute right-2 p-3 text-gray-500 hover:text-white disabled:opacity-0 transition-all"
+          >
+            <Send size={18} />
+          </button>
+        </div>
       </form>
     </div>
   );
