@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
  * Initializes the Vertex AI pipeline configuration.

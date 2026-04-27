@@ -25,7 +25,7 @@ export default function LanguageSelector() {
       <Globe size={20} className="text-gray-400" />
       <select
         value={language}
-        onChange={(e) => setLanguage(e.target.value as any)}
+        onChange={(e) => setLanguage(e.target.value as 'en' | 'hi' | 'te' | 'kn')}
         aria-label="Select language"
         className="bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded cursor-pointer"
       >

@@ -9,7 +9,7 @@ jest.mock('@/components/LanguageContext', () => ({
 // Mock @react-google-maps/api
 jest.mock('@react-google-maps/api', () => ({
   useJsApiLoader: jest.fn().mockReturnValue({ isLoaded: true }),
-  GoogleMap: ({ children, onLoad }: any) => {
+  GoogleMap: ({ children, onLoad }: { children: React.ReactNode; onLoad?: (map: unknown) => void }) => {
     // Simulate map load to trigger marker effect
     useEffect(() => { if (onLoad) onLoad({}); }, []);
     return <div data-testid="google-map">{children}</div>;
@@ -35,7 +35,7 @@ describe('Map Component', () => {
     mockGeocode = jest.fn();
 
     // Mock global google object for Advanced Markers
-    (global as any).window.google = {
+    (global as unknown as { window: { google: unknown } }).window.google = {
       maps: {
         Geocoder: jest.fn().mockImplementation(() => ({
           geocode: mockGeocode
@@ -55,7 +55,7 @@ describe('Map Component', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    delete (global as any).window.google;
+    delete (global as unknown as { window: { google?: unknown } }).window.google;
   });
 
   it('renders the search form correctly', () => {

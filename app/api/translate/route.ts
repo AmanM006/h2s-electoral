@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     const translations = data.data.translations;
     
     if (Array.isArray(text)) {
-      return NextResponse.json({ translatedText: translations.map((t: any) => t.translatedText) });
+      return NextResponse.json({ translatedText: translations.map((t: { translatedText: string }) => t.translatedText) });
     } else {
       return NextResponse.json({ translatedText: translations[0].translatedText });
     }

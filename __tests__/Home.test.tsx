@@ -3,7 +3,7 @@ import Home from '@/app/page';
 
 // Mock dynamically loaded components so they don't try to load Google Maps / YouTube
 jest.mock('next/dynamic', () => {
-  return function mockDynamic(importFn: () => Promise<any>, _opts?: any) {
+  return function mockDynamic(importFn: () => Promise<unknown>, _opts?: unknown) {
     // Return a simple placeholder component
     const componentName = importFn.toString();
     if (componentName.includes('Map')) {

@@ -56,6 +56,7 @@ export default function Timeline() {
 
   useEffect(() => {
     if (language === 'en') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSteps(defaultSteps);
       setHeadingText('Election Roadmap');
       return;
